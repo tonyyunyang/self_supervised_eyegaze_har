@@ -1,6 +1,6 @@
 {
   "data_path": "dataset/training_data/DesktopActivity",
-  "data_type": "dataset/training_data/DesktopActivity/overlap_0.0_window_10s",
+  "data_type": "overlap_0.0_window_10s",
 
   "result_path": "results/DesktopActivity",
 
