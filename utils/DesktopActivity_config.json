@@ -1,0 +1,53 @@
+{
+  "data_path": "dataset/training_data/DesktopActivity",
+  "data_type": "dataset/training_data/DesktopActivity/overlap_0.0_window_10s",
+
+  "result_path": "results/DesktopActivity",
+
+  "pretrain_epoch": 100,
+  "pretrain_max_update_epochs": 100,
+  "pretrain_warmup_epochs": 10,
+  "pretrain_batch_size": 64,
+  "pretrain_base_lr": 0.001,
+  "pretrain_final_lr": 0.0001,
+
+  "pretrain_model_path": null,
+  "finetune_epoch": 100,
+  "finetune_max_update_epochs": 100,
+  "finetune_warmup_epochs": 10,
+  "finetune_batch_size": 64,
+  "finetune_base_lr": 0.001,
+  "finetune_final_lr": 0.0001,
+
+  "pretrain_proportion": 0.8,
+  "finetune_proportion": 0.8,
+
+  "label_smoothing": 0.1,
+
+  "kdd_model": {
+    "feat_dim": null,
+    "max_seq_len": null,
+    "d_model": 128,
+    "n_heads": 8,
+    "n_layers": 6,
+    "dim_feedforward": 512,
+    "emb_dropout": 0.1,
+    "enc_dropout": 0.1,
+    "embedding": "linear",
+    "conv_config": null
+  },
+
+  "V1Conv": {
+    "kernel_size": 3,
+    "stride": 1,
+    "padding": 1,
+    "dilation": 1
+  },
+
+    "V2Conv": {
+    "kernel_size": 3,
+    "stride": 1,
+    "padding": 1,
+    "dilation": 1
+  }
+}
