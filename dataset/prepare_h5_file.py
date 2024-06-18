@@ -2,15 +2,33 @@ import os
 import h5py
 import json
 
+import numpy as np
 
-def process_data(window_length, overlap_ratio, raw_data_path, prepared_data_path, file_name):
+
+def process_data(window_length, overlap_ratio, raw_data_path, prepared_data_path, file_name, standardize=False):
     training_data = []
     labels = []
     starting_indices = {}
     current_subject = None
     current_index = 0
 
+    mean = None
+    std = None
+
     files = sorted([file for file in os.listdir(raw_data_path) if file.endswith(".csv")])
+
+    if standardize:
+        all_data = []
+        for file in files:
+            file_path = os.path.join(raw_data_path, file)
+            with open(file_path, "r") as f:
+                for line in f:
+                    x, y = map(float, line.strip().split(","))
+                    all_data.append([x, y])
+        all_data = np.array(all_data)
+        mean = np.mean(all_data, axis=0)
+        std = np.std(all_data, axis=0)
+        print(f"Mean: {mean}, Std: {std}")
 
     for file in files:
         file_path = os.path.join(raw_data_path, file)
@@ -20,6 +38,9 @@ def process_data(window_length, overlap_ratio, raw_data_path, prepared_data_path
             data = []
             for line in f:
                 x, y = map(float, line.strip().split(","))
+                if standardize:
+                    x = (x - mean[0]) / std[0]
+                    y = (y - mean[1]) / std[1]
                 data.append([x, y])
 
             windows = create_windows(data, window_length, overlap_ratio)

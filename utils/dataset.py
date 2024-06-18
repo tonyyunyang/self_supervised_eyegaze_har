@@ -1,3 +1,7 @@
+import h5py
+from torch.utils.data import Dataset
+
+
 def extract_parameters_from_datatype(data_type):
     # Split the data_type string by underscore
     parts = data_type.split('_')
@@ -16,3 +20,18 @@ def extract_parameters_from_datatype(data_type):
     window_length = int(window_seconds * 30)
 
     return overlap, window_seconds, window_length
+
+
+class FullySupervisedDataset(Dataset):
+    def __init__(self, file_path, indices):
+        self.file = h5py.File(file_path, 'r')
+        self.indices = indices
+
+    def __getitem__(self, item):
+        # Extract the index from the indices list
+        index = self.indices[item]
+
+        # Load the data from the file
+        data = self.file['training_data'][index]
+
+        return data
