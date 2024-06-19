@@ -1,5 +1,5 @@
 {
-  "data_path": "dataset/training_data/DesktopActivity",
+  "data_path": "dataset/training_data/DesktopActivity_Standardized",
   "data_type": "overlap_0.0_window_10s",
 
   "result_path": "results/DesktopActivity",
@@ -25,7 +25,7 @@
   "label_smoothing": 0.1,
 
   "kdd_model": {
-    "feat_dim": null,
+    "feat_dim": 2,
     "max_seq_len": null,
     "d_model": 128,
     "n_heads": 8,

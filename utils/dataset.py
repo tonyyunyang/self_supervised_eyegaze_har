@@ -1,4 +1,5 @@
 import h5py
+import torch
 from torch.utils.data import Dataset
 
 
@@ -23,15 +24,25 @@ def extract_parameters_from_datatype(data_type):
 
 
 class FullySupervisedDataset(Dataset):
-    def __init__(self, file_path, indices):
+    def __init__(self, file_path, indices, label_map):
         self.file = h5py.File(file_path, 'r')
         self.indices = indices
+
+        # Invert the label map so we can look up by string label
+        self.label_map = {v: k for k, v in label_map.items()}
+
+    def __len__(self):
+        return len(self.indices)
 
     def __getitem__(self, item):
         # Extract the index from the indices list
         index = self.indices[item]
 
         # Load the data from the file
-        data = self.file['training_data'][index]
+        data = torch.from_numpy(self.file['training_data'][index])
 
-        return data
+        label_str = self.file['labels'][index][1]
+
+        label_int = torch.tensor(self.label_map[label_str])
+
+        return data, label_int

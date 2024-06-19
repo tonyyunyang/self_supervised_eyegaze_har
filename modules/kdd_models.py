@@ -4,10 +4,10 @@ from einops.layers.torch import Rearrange
 from torch import nn, floor
 
 
-class KDDTransformerEncoderPretrain(nn.Module):
+class KDDTransformerEncoderImputation(nn.Module):
     def __init__(self, feat_dim, max_len, d_model, n_heads, n_layers, dim_feedforward, emb_dropout=0.1, enc_dropout=0.1,
                  embedding='convolution', conv_config=None):
-        super(KDDTransformerEncoderPretrain, self).__init__()
+        super(KDDTransformerEncoderImputation, self).__init__()
 
         self.max_len = max_len
         self.d_model = d_model
@@ -66,12 +66,13 @@ class KDDTransformerEncoderPretrain(nn.Module):
         return x
 
 
-class KDDTransformerEncoderFinetune(nn.Module):
+class KDDTransformerEncoderClassification(nn.Module):
     def __init__(self, feat_dim, max_len, d_model, n_heads, n_layers, dim_feedforward, emb_dropout=0.1, enc_dropout=0.1,
                  embedding='convolution', conv_config=None, num_classes=0):
-        super(KDDTransformerEncoderFinetune, self).__init__()
+        super(KDDTransformerEncoderClassification, self).__init__()
 
-        assert num_classes == 0, "Number of classes should be provided for finetuning."
+        assert num_classes != 0, "Number of classes should be provided for finetuning."
+        # print(f"Number of classes: {num_classes}")
 
         self.max_len = max_len
         self.d_model = d_model
@@ -80,7 +81,7 @@ class KDDTransformerEncoderFinetune(nn.Module):
             self.proj_inp = nn.Linear(feat_dim, d_model)
             print(f"Linear embedding: {self.max_len} sequence length.")
         elif embedding == "convolution":
-            assert conv_config is None, "Embedding is chosen as Conv, but conv_config is empty."
+            assert conv_config is not None, "Embedding is chosen as Conv, conv_config should be provided"
             self.proj_inp = nn.Sequential(
                 Rearrange('b l d -> b d l'),  # Rearrange input shape to [batch_size, feat_dim, seq_length]
                 nn.Conv1d(feat_dim, d_model, kernel_size=conv_config['kernel_size'], stride=conv_config['stride'],
