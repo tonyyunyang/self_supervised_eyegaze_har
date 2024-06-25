@@ -4,8 +4,8 @@
 
   "result_path": "results/DesktopActivity",
 
-  "pretrain_epoch": 100,
-  "pretrain_max_update_epochs": 100,
+  "pretrain_epoch": 20,
+  "pretrain_max_update_epochs": 20,
   "pretrain_warmup_epochs": 10,
   "pretrain_batch_size": 64,
   "pretrain_base_lr": 0.001,
@@ -13,7 +13,7 @@
 
   "pretrain_model_path": null,
   "finetune_epoch": 100,
-  "finetune_max_update_epochs": 100,
+  "finetune_max_update_epochs": 80,
   "finetune_warmup_epochs": 10,
   "finetune_batch_size": 64,
   "finetune_base_lr": 0.001,
