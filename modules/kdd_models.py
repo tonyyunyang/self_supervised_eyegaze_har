@@ -1,7 +1,8 @@
 import sys
 from modules.modified_transformer import LearnablePositionalEncoding, Transformer
 from einops.layers.torch import Rearrange
-from torch import nn, floor
+from torch import nn
+from math import floor
 
 
 class KDDTransformerEncoderImputation(nn.Module):

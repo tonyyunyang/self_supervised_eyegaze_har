@@ -3,17 +3,19 @@ import json
 import os
 
 import h5py
+import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 from torch.utils.tensorboard import SummaryWriter
+import seaborn as sns
 
 
 def train_fully_supervised_pretrain_model(model, loss, optimizer, scheduler, loaders, model_config, config,
                                           leave_out_subject):
     train_set = loaders[0]
     val_set = loaders[1]
-    test_set = loaders[2]
+    # test_set = loaders[2]
 
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -73,9 +75,9 @@ def train_fully_supervised_pretrain_model(model, loss, optimizer, scheduler, loa
         val_accuracy_list.append(val_acc)
         val_f1_score_list.append(val_f1)
 
-        test_acc, test_f1 = force_eval_model(model, test_set, device)
-        writer.add_scalar('Force_Test/Accuracy', test_acc, epoch)
-        writer.add_scalar('Force_Test/F1_Score', test_f1, epoch)
+        # test_acc, test_f1 = force_eval_model(model, test_set, device)
+        # writer.add_scalar('Force_Test/Accuracy', test_acc, epoch)
+        # writer.add_scalar('Force_Test/F1_Score', test_f1, epoch)
 
         # Log training and validation metrics
         writer.add_scalar('Train_Loss/train', train_loss, epoch)
@@ -105,8 +107,10 @@ def train_fully_supervised_pretrain_model(model, loss, optimizer, scheduler, loa
     save_metrics(train_loss_list, val_loss_list, val_accuracy_list, val_f1_score_list, config["pretrain_epoch"], config)
 
     del model
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    if device == "mps":
+        torch.mps.empty_cache()
+    elif device == "cuda":
+        torch.cuda.empty_cache()
     gc.collect()
 
     return writer
@@ -127,7 +131,7 @@ def pass_epoch(model, loss, optimizer, scheduler, train_set, val_set, device):
 
         optimizer.zero_grad()
         computed_loss.backward()
-        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
 
         with torch.no_grad():
@@ -305,8 +309,10 @@ def train_self_supervised_pretrain_model(model, loss, optimizer, scheduler, load
     save_loss_metrics(train_loss_list, val_loss_list, config["pretrain_epoch"], config)
 
     del model
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    if device == "mps":
+        torch.mps.empty_cache()
+    elif device == "cuda":
+        torch.cuda.empty_cache()
     gc.collect()
 
     return writer
@@ -394,3 +400,119 @@ def save_loss_metrics(train_loss_list, val_loss_list, epochs, config):
 
     # Clear the current figure's context for the next plot
     plt.clf()
+
+
+def eval_best_model(model, test_set, config, label_map):
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    # Load the best model
+    model.load_state_dict(torch.load(os.path.join(config["model_path"], "best_model.pth")))
+    model = model.to(device)
+    model.eval()
+
+    true_labels = []
+    pred_labels = []
+
+    for batch in test_set:
+        mvts_inputs, labels = batch
+        mvts_inputs, labels = mvts_inputs.to(device), labels.to(device)
+
+        with torch.no_grad():
+            outputs = model(mvts_inputs)
+
+            true_labels.extend(labels.cpu().numpy())
+            pred_labels.extend(outputs.argmax(dim=1).cpu().numpy())
+
+    test_acc = accuracy_score(true_labels, pred_labels)
+    test_f1 = f1_score(true_labels, pred_labels, average='weighted')
+
+    # Decode the labels using label_map
+    true_labels_decoded = [label_map[label] for label in true_labels]
+    pred_labels_decoded = [label_map[label] for label in pred_labels]
+
+    # Compute the confusion matrix
+    cm = confusion_matrix(true_labels_decoded, pred_labels_decoded, labels=list(label_map.values()))
+
+    # Normalize the confusion matrix
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    # Plot the confusion matrix
+    fig = plt.figure(figsize=(10, 8))
+    sns.heatmap(cm_normalized, annot=True, fmt=".2f", cmap="Blues", xticklabels=label_map.values(), yticklabels=label_map.values())
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted Labels')
+    plt.ylabel('True Labels')
+
+    # Save the confusion matrix plot
+    plt.savefig(
+        os.path.join(config["model_path"], f"f1_{format(test_f1, '.5f').rstrip('0').rstrip('.')}_"
+                                           f"acc_{format(test_acc, '.5f').rstrip('0').rstrip('.')}_"
+                                           f"best_confusion_matrix.png"))
+
+    # Free up CUDA memory
+    del model
+    if device == "mps":
+        torch.mps.empty_cache()
+    elif device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+
+    return test_acc, test_f1
+
+
+def eval_last_model(model, test_set, config, label_map):
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    # Load the best model
+    model.load_state_dict(torch.load(os.path.join(config["model_path"], "last_model.pth")))
+    model = model.to(device)
+    model.eval()
+
+    true_labels = []
+    pred_labels = []
+
+    for batch in test_set:
+        mvts_inputs, labels = batch
+        mvts_inputs, labels = mvts_inputs.to(device), labels.to(device)
+
+        with torch.no_grad():
+            outputs = model(mvts_inputs)
+
+            true_labels.extend(labels.cpu().numpy())
+            pred_labels.extend(outputs.argmax(dim=1).cpu().numpy())
+
+    test_acc = accuracy_score(true_labels, pred_labels)
+    test_f1 = f1_score(true_labels, pred_labels, average='weighted')
+
+    # Decode the labels using label_map
+    true_labels_decoded = [label_map[label] for label in true_labels]
+    pred_labels_decoded = [label_map[label] for label in pred_labels]
+
+    # Compute the confusion matrix
+    cm = confusion_matrix(true_labels_decoded, pred_labels_decoded, labels=list(label_map.values()))
+
+    # Normalize the confusion matrix
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    # Plot the confusion matrix
+    fig = plt.figure(figsize=(10, 8))
+    sns.heatmap(cm_normalized, annot=True, fmt=".2f", cmap="Blues", xticklabels=label_map.values(), yticklabels=label_map.values())
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted Labels')
+    plt.ylabel('True Labels')
+
+    # Save the confusion matrix plot
+    plt.savefig(
+        os.path.join(config["model_path"], f"f1_{format(test_f1, '.5f').rstrip('0').rstrip('.')}_"
+                                           f"acc_{format(test_acc, '.5f').rstrip('0').rstrip('.')}_"
+                                           f"last_confusion_matrix.png"))
+
+    # Free up CUDA memory
+    del model
+    if device == "mps":
+        torch.mps.empty_cache()
+    elif device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+
+    return test_acc, test_f1

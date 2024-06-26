@@ -1,0 +1,2 @@
+Average Accuracy: 0.2726632621479418
+Average F1 Score: 0.24997368641934772

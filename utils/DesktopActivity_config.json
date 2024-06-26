@@ -1,15 +1,15 @@
 {
   "data_path": "dataset/training_data/DesktopActivity_Standardized",
-  "data_type": "overlap_0.0_window_10s",
+  "data_type": "overlap_0.0_window_5s",
 
   "result_path": "results/DesktopActivity",
 
-  "pretrain_epoch": 20,
-  "pretrain_max_update_epochs": 20,
-  "pretrain_warmup_epochs": 10,
-  "pretrain_batch_size": 64,
+  "pretrain_epoch": 151,
+  "pretrain_max_update_epochs": 151,
+  "pretrain_warmup_epochs": 15,
+  "pretrain_batch_size": 32,
   "pretrain_base_lr": 0.001,
-  "pretrain_final_lr": 0.0001,
+  "pretrain_final_lr": 0.001,
 
   "pretrain_model_path": null,
   "finetune_epoch": 100,
@@ -17,7 +17,7 @@
   "finetune_warmup_epochs": 10,
   "finetune_batch_size": 64,
   "finetune_base_lr": 0.001,
-  "finetune_final_lr": 0.0001,
+  "finetune_final_lr": 0.001,
 
   "pretrain_proportion": 0.8,
   "finetune_proportion": 0.8,
@@ -28,9 +28,9 @@
     "feat_dim": 2,
     "max_seq_len": null,
     "d_model": 128,
-    "n_heads": 8,
-    "n_layers": 6,
-    "dim_feedforward": 512,
+    "n_heads": 16,
+    "n_layers": 1,
+    "dim_feedforward": 256,
     "emb_dropout": 0.1,
     "enc_dropout": 0.1,
     "embedding": "linear",
@@ -38,15 +38,22 @@
   },
 
   "V1Conv": {
-    "kernel_size": 3,
-    "stride": 1,
+    "kernel_size": 30,
+    "stride": 15,
     "padding": 1,
     "dilation": 1
   },
 
-    "V2Conv": {
-    "kernel_size": 3,
-    "stride": 1,
+  "V2Conv": {
+    "kernel_size": 40,
+    "stride": 20,
+    "padding": 1,
+    "dilation": 1
+  },
+
+  "V3Conv": {
+    "kernel_size": 20,
+    "stride": 10,
     "padding": 1,
     "dilation": 1
   }
