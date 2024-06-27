@@ -1,0 +1,18 @@
+{
+    "feat_dim": 2,
+    "max_len": 600,
+    "d_model": 128,
+    "n_heads": 16,
+    "n_layers": 1,
+    "dim_feedforward": 256,
+    "emb_dropout": 0.1,
+    "enc_dropout": 0.1,
+    "embedding": "convolution",
+    "conv_config": {
+        "kernel_size": 20,
+        "stride": 10,
+        "padding": 1,
+        "dilation": 1
+    },
+    "num_classes": 6
+}
