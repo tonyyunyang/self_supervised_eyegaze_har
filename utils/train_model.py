@@ -248,8 +248,7 @@ def train_self_supervised_pretrain_model(model, loss, optimizer, scheduler, load
                         f"epochs_{config['pretrain_epoch']}_max_update_steps_{config['pretrain_max_update_epochs']}_"
                         f"warmup_steps_{config['pretrain_warmup_epochs']}_batch_size_{config['pretrain_batch_size']}_"
                         f"base_lr_{format(config['pretrain_base_lr'], '.10f').rstrip('0').rstrip('.')}_"
-                        f"final_lr_{format(config['pretrain_final_lr'], '.10f').rstrip('0').rstrip('.')}_"
-                        f"label_smoothing_{format(config['label_smoothing'], '.10f').rstrip('0').rstrip('.')}")
+                        f"final_lr_{format(config['pretrain_final_lr'], '.10f').rstrip('0').rstrip('.')}")
 
     path = os.path.join(path, f"{leave_out_subject}_leave_out")
 
@@ -279,7 +278,7 @@ def train_self_supervised_pretrain_model(model, loss, optimizer, scheduler, load
 
         writer.add_scalar('Learning_Rate', optimizer.param_groups[0]['lr'], epoch)
 
-        train_loss, val_loss= pass_imputation_epoch(model, loss, optimizer, scheduler, train_set, val_set, device, is_last_epoch, os.path.join(path, "imputate_result"))
+        train_loss, val_loss = pass_imputation_epoch(model, loss, optimizer, scheduler, train_set, val_set, device, is_last_epoch, os.path.join(path, "imputate_result"))
         train_loss_list.append(train_loss)
         val_loss_list.append(val_loss)
 
@@ -374,7 +373,7 @@ def pass_imputation_epoch(model, loss, optimizer, scheduler, train_set, val_set,
     # Saving the validation results as h5 file
     if save_last_epoch_samples and save_dir_path is not None:
         print("Writing the imputation result to file")
-        with h5py.File(os.path.join(save_dir_path, 'imputation_result.h5'), 'w') as hf:
+        with h5py.File(os.path.join(save_dir_path, 'train_imputation_result.h5'), 'w') as hf:
             hf.create_dataset('original_input', data=torch.cat(all_original_inputs).numpy())
             hf.create_dataset('mask', data=torch.cat(all_masks).numpy())
             hf.create_dataset('predicted_output', data=torch.cat(all_outputs).numpy())
@@ -516,3 +515,89 @@ def eval_last_model(model, test_set, config, label_map):
     gc.collect()
 
     return test_acc, test_f1
+
+
+def eval_best_imputation_model(model, test_set, config, save_dir_path):
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    # Load the best model
+    model.load_state_dict(torch.load(os.path.join(config["model_path"], "best_model.pth")))
+    model = model.to(device)
+    model.eval()
+
+    # Variables to store data for saving
+    all_original_inputs, all_masks, all_outputs = [], [], []
+
+    for batch in test_set:
+        original_input, mask, masked_input, indices = batch
+        original_input, mask, masked_input = original_input.to(device), mask.to(device), masked_input.to(device)
+
+        with torch.no_grad():
+            outputs = model(masked_input)
+
+            # Store outputs for saving
+            os.makedirs(save_dir_path, exist_ok=True)
+            all_original_inputs.append(original_input.cpu())
+            all_masks.append(mask.cpu())
+            all_outputs.append(outputs.cpu())
+
+    # Saving the validation results as h5 file
+    print("Writing the imputation result to file")
+    with h5py.File(os.path.join(save_dir_path, 'test_best_imputation_result.h5'), 'w') as hf:
+        hf.create_dataset('original_input', data=torch.cat(all_original_inputs).numpy())
+        hf.create_dataset('mask', data=torch.cat(all_masks).numpy())
+        hf.create_dataset('predicted_output', data=torch.cat(all_outputs).numpy())
+    print("Finish writing the imputation result to file")
+
+    # Free up CUDA memory
+    del model
+    if device == "mps":
+        torch.mps.empty_cache()
+    elif device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+
+    return
+
+
+def eval_last_imputation_model(model, test_set, config, save_dir_path):
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    # Load the best model
+    model.load_state_dict(torch.load(os.path.join(config["model_path"], "last_model.pth")))
+    model = model.to(device)
+    model.eval()
+
+    # Variables to store data for saving
+    all_original_inputs, all_masks, all_outputs = [], [], []
+
+    for batch in test_set:
+        original_input, mask, masked_input, indices = batch
+        original_input, mask, masked_input = original_input.to(device), mask.to(device), masked_input.to(device)
+
+        with torch.no_grad():
+            outputs = model(masked_input)
+
+            # Store outputs for saving
+            os.makedirs(save_dir_path, exist_ok=True)
+            all_original_inputs.append(original_input.cpu())
+            all_masks.append(mask.cpu())
+            all_outputs.append(outputs.cpu())
+
+    # Saving the validation results as h5 file
+    print("Writing the imputation result to file")
+    with h5py.File(os.path.join(save_dir_path, 'test_last_imputation_result.h5'), 'w') as hf:
+        hf.create_dataset('original_input', data=torch.cat(all_original_inputs).numpy())
+        hf.create_dataset('mask', data=torch.cat(all_masks).numpy())
+        hf.create_dataset('predicted_output', data=torch.cat(all_outputs).numpy())
+    print("Finish writing the imputation result to file")
+
+    # Free up CUDA memory
+    del model
+    if device == "mps":
+        torch.mps.empty_cache()
+    elif device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+
+    return

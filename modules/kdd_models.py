@@ -17,7 +17,7 @@ class KDDTransformerEncoderImputation(nn.Module):
             self.proj_inp = nn.Linear(feat_dim, d_model)
             print(f"Linear embedding: {self.max_len} sequence length.")
         elif embedding == "convolution":
-            assert conv_config is None, "Embedding is chosen as Conv, but conv_config is empty."
+            assert conv_config is not None, "Embedding is chosen as Conv, but conv_config is empty."
             self.proj_inp = nn.Sequential(
                 Rearrange('b l d -> b d l'),  # Rearrange input shape to [batch_size, feat_dim, seq_length]
                 nn.Conv1d(feat_dim, d_model, kernel_size=conv_config['kernel_size'], stride=conv_config['stride'],
