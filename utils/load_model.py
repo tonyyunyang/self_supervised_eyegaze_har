@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from modules.kdd_models import KDDTransformerEncoderClassification, KDDTransformerEncoderImputation
+from modules.kdd_original_models import KDDOriginalTransformerEncoderImputation
 
 
 def load_create_classification_model(config: dict, num_classes: int) -> (nn.Module, dict):
@@ -86,7 +87,8 @@ def load_create_imputation_model(config: dict) -> (nn.Module, dict):
         }
 
         pprint(model_config)
-        model = KDDTransformerEncoderImputation(**model_config)
+        # model = KDDTransformerEncoderImputation(**model_config)
+        model = KDDOriginalTransformerEncoderImputation(**model_config)
 
         device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         model = model.to(device)
