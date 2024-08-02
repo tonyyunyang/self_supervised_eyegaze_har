@@ -25,6 +25,26 @@ def get_self_supervised_pretrain_indices(subjects, leave_out_subject, last_index
     return pretrain_test_indices, pretrain_train_indices
 
 
+def split_leave_out_rest_sub_sample_indices(subjects, leave_out_subject, last_index):
+    leave_out_sub_samples = []
+    rest_sub_samples = []
+
+    # Ensure subjects are sorted by their starting indices to maintain order
+    sorted_subjects = sorted(subjects.items(), key=lambda x: x[1])
+
+    # Find the indices for the leave-out subject
+    for i, (subject, start) in enumerate(sorted_subjects):
+        # Calculate the end index based on whether it's the last subject in the list
+        end = sorted_subjects[i + 1][1] if i + 1 < len(sorted_subjects) else last_index + 1
+
+        if subject == leave_out_subject:
+            leave_out_sub_samples.extend(range(start, end))
+        else:
+            rest_sub_samples.extend(range(start, end))
+
+    return leave_out_sub_samples, rest_sub_samples
+
+
 def get_fully_supervised_finetune_indices(finetune_subject_indices, data_file_path, finetune_proportion=0.):
     # Sort the indices to ensure they're in increasing order
     finetune_subject_indices = np.sort(finetune_subject_indices)

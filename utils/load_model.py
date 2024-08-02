@@ -119,7 +119,7 @@ def load_create_original_classification_model(config: dict, num_classes: int) ->
         model = model.to(device)
 
         # Load the pre-trained state dict
-        pretrained_state_dict = torch.load(os.path.join(config['pretrain_model_path'], 'best_model.pth'), map_location=device)
+        pretrained_state_dict = torch.load(os.path.join(config['pretrain_model_path'], 'last_model.pth'), map_location=device)
 
         # Remove the 'output' layer from the pre-trained state dict
         pretrained_state_dict = {k: v for k, v in pretrained_state_dict.items() if not k.startswith('output')}
