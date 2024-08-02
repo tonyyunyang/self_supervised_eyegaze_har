@@ -5,6 +5,21 @@ from torch import nn
 from math import floor
 
 
+class LinearLengthAdjust(nn.Module):
+    def __init__(self, input_length, target_length, feat_dim):
+        super().__init__()
+        self.linear = nn.Linear(input_length * feat_dim, target_length * feat_dim)
+        self.input_length = input_length
+        self.target_length = target_length
+        self.feat_dim = feat_dim
+
+    def forward(self, x):
+        batch_size = x.size(0)
+        x = x.contiguous().view(batch_size, -1)  # Ensure the tensor is contiguous and then flatten
+        x = self.linear(x)
+        return x.view(batch_size, self.target_length, self.feat_dim)
+
+
 class KDDTransformerEncoderImputation(nn.Module):
     def __init__(self, feat_dim, max_len, d_model, n_heads, n_layers, dim_feedforward, emb_dropout=0.1, enc_dropout=0.1,
                  embedding='convolution', conv_config=None):
@@ -45,16 +60,18 @@ class KDDTransformerEncoderImputation(nn.Module):
         if embedding == "linear":
             self.output = nn.Linear(d_model, feat_dim)
         else:  # convolution
+            recon_conv_seq_len = (self.max_len - 1) * conv_config['stride'] - 2 * conv_config['padding'] + conv_config['dilation'] * (conv_config['kernel_size'] - 1) + 0 + 1
             self.output = nn.Sequential(
                 Rearrange('b l d -> b d l'),
                 nn.ConvTranspose1d(d_model, feat_dim, kernel_size=conv_config['kernel_size'],
                                    stride=conv_config['stride'],
                                    padding=conv_config['padding'], dilation=conv_config['dilation']),
-                Rearrange('b d l -> b l d')
+                Rearrange('b d l -> b l d'),
+                LinearLengthAdjust(recon_conv_seq_len, max_len, feat_dim)
             )
-            recon_conv_seq_len = (self.max_len - 1) * conv_config['stride'] - 2 * conv_config['padding'] + conv_config[
-                'dilation'] * (conv_config['kernel_size'] - 1) + 0 + 1
-            assert recon_conv_seq_len == max_len, f"Reconstructed sequence length {recon_conv_seq_len} does not match the original sequence length {max_len}. Please choose the Convolutional configuration properly."
+            # recon_conv_seq_len = (self.max_len - 1) * conv_config['stride'] - 2 * conv_config['padding'] + conv_config[
+            #     'dilation'] * (conv_config['kernel_size'] - 1) + 0 + 1
+            # assert recon_conv_seq_len == max_len, f"Reconstructed sequence length {recon_conv_seq_len} does not match the original sequence length {max_len}. Please choose the Convolutional configuration properly."
 
     def forward(self, x):
         x = self.proj_inp(x) * (self.d_model ** 0.5)

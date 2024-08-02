@@ -1,57 +1,94 @@
 {
-  "data_path": "dataset/training_data/DesktopActivity_Standardized",
+  "data_path": "dataset/training_data/DesktopActivity_std_norm",
   "data_type": "overlap_0.8_window_15s",
 
-  "result_path": "results/DesktopActivity_Standardized",
+  "result_path": "results/DesktopActivity",
 
-  "pretrain_epoch": 501,
-  "pretrain_max_update_epochs": 501,
-  "pretrain_warmup_epochs": 50,
+  "pretrain_epoch": 301,
+  "pretrain_max_update_epochs": 301,
+  "pretrain_warmup_epochs": 30,
   "pretrain_batch_size": 64,
   "pretrain_base_lr": 0.001,
   "pretrain_final_lr": 0.001,
 
   "pretrain_model_path": null,
-  "finetune_epoch": 100,
-  "finetune_max_update_epochs": 80,
-  "finetune_warmup_epochs": 10,
-  "finetune_batch_size": 32,
-  "finetune_base_lr": 0.001,
+  "finetune_epoch": 801,
+  "finetune_max_update_epochs": 801,
+  "finetune_warmup_epochs": 50,
+  "finetune_batch_size": 64,
+  "finetune_base_lr": 0.0001,
   "finetune_final_lr": 0.0001,
 
   "pretrain_proportion": 0.8,
-  "finetune_proportion": 0.8,
+  "finetune_proportion": 0.1,
+  "finetune_train_proportion": null,
+  "pretrain_label_availability": 1.0,
 
-  "label_smoothing": 0.1,
+  "label_smoothing": 0.0,
 
   "kdd_model": {
     "feat_dim": 2,
     "max_seq_len": null,
     "d_model": 64,
     "n_heads": 8,
-    "n_layers": 1,
-    "dim_feedforward": 128,
+    "n_layers": 3,
+    "dim_feedforward": 256,
     "emb_dropout": 0.1,
     "enc_dropout": 0.1,
     "embedding": "convolution",
-    "conv_config": "V3Conv"
+    "conv_config": "V3Conv_15sec"
   },
 
-  "V1Conv": {
-    "kernel_size": 10,
-    "stride": 2,
+  "kdd_original_model": {
+    "feat_dim": 2,
+    "max_seq_len": null,
+    "d_model": 64,
+    "n_heads": 8,
+    "n_layers": 3,
+    "dim_feedforward": 256,
+    "emb_dropout": 0.1,
+    "enc_dropout": 0.1,
+    "embedding": "convolution",
+    "conv_config": "V3Conv_15sec",
+    "pre_norm": false
+  },
+
+  "V1Conv_5sec": {
+    "kernel_size": 20,
+    "stride": 10,
     "padding": 0,
     "dilation": 1
   },
 
-  "V2Conv": {
-    "kernel_size": 15,
-    "stride": 5,
+  "V2Conv_10sec": {
+    "kernel_size": 30,
+    "stride": 15,
     "padding": 0,
     "dilation": 1
   },
 
-  "V3Conv": {
+  "V3Conv_15sec": {
+    "kernel_size": 40,
+    "stride": 10,
+    "padding": 0,
+    "dilation": 1
+  },
+
+  "V4Conv_20sec": {
+    "kernel_size": 30,
+    "stride": 15,
+    "padding": 0,
+    "dilation": 1
+  },
+
+  "V5Conv_25sec": {
+    "kernel_size": 40,
+    "stride": 20,
+    "padding": 0,
+    "dilation": 1
+  },
+
+  "V6Conv_30sec": {
     "kernel_size": 30,
     "stride": 15,
     "padding": 0,
